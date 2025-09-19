@@ -1,0 +1,825 @@
+------------------------------------------------
+-- Calculated Table: 'Measures Table Production'
+------------------------------------------------
+TABLE 'Measures Table Production' = DATATABLE("Placeholder", STRING, {{"Keep"}})
+
+------------------------------
+-- Measure: [Total Produciton]
+------------------------------
+MEASURE 'Measures Table Production'[Total Produciton] = Sum('production_hierarchy'[Volume])
+    , FormatString = "#,0"
+
+---------------------------------------
+-- Measure: [Previous Month Production]
+---------------------------------------
+MEASURE 'Measures Table Production'[Previous Month Production] = 
+    CALCULATE(
+        [Total Produciton],
+        DATEADD(
+            'Calendar'[Date],
+            -1,
+            MONTH
+        )
+    )
+    , FormatString = "0"
+
+---------------------------------
+-- Measure: [Production Growth %]
+---------------------------------
+MEASURE 'Measures Table Production'[Production Growth %] = DIVIDE([Total Produciton] - [Previous Month Production], [Previous Month Production])
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+-------------------------------------
+-- Measure: [Production Growth Arrow]
+-------------------------------------
+MEASURE 'Measures Table Production'[Production Growth Arrow] = 
+    var uparrow = UNICHAR(129093)
+    var downarrow = UNICHAR(129095)
+    var revenuegrowth = [Production Growth %]
+    
+    RETURN
+    IF(revenuegrowth < 0,
+     FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & downarrow,
+        FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & uparrow
+    )
+
+---------------------------------------
+-- Measure: [Produciton Same Period LY]
+---------------------------------------
+MEASURE 'Measures Table Production'[Produciton Same Period LY] = 
+    CALCULATE(
+        [Total Produciton],
+        DATEADD(
+            'Calendar'[Date],
+            -1,
+            YEAR))
+    , FormatString = "0"
+
+-------------------------------------
+-- Measure: [Production Growth YOY %]
+-------------------------------------
+MEASURE 'Measures Table Production'[Production Growth YOY %] = DIVIDE([Total Produciton] - [Produciton Same Period LY], [Produciton Same Period LY])
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+-----------------------------------------
+-- Measure: [Production Growth YOY Arrow]
+-----------------------------------------
+MEASURE 'Measures Table Production'[Production Growth YOY Arrow] = 
+    var uparrow = UNICHAR(129093)
+    var downarrow = UNICHAR(129095)
+    var revenuegrowth = [Production Growth YOY %]
+    
+    RETURN
+    IF(revenuegrowth < 0,
+     FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & downarrow,
+        FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & uparrow
+    )
+
+-------------------
+-- Measure: [YOY %]
+-------------------
+MEASURE 'Measures Table Production'[YOY %] = 
+    VAR Current_Year = SUM ( production_hierarchy[Volume] )
+    VAR Previous_Year =
+        CALCULATE (
+            SUM ( production_hierarchy[Volume] ),
+            SAMEPERIODLASTYEAR ( 'Calendar'[Date] )
+        )
+    RETURN
+    DIVIDE ( Current_Year - Previous_Year, Previous_Year )
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+-------------------------------------
+-- Measure: [Current Year Production]
+-------------------------------------
+MEASURE 'Measures Table Production'[Current Year Production] = 
+    CALCULATE (
+        SUM ( production_hierarchy[Volume] ),
+        FILTER (
+            ALL ( 'Calendar' ),
+            'Calendar'[Year] = YEAR ( TODAY() )
+        )
+    )
+    , FormatString = "0"
+
+--------------------------------------
+-- Measure: [Previous Year Production]
+--------------------------------------
+MEASURE 'Measures Table Production'[Previous Year Production] = 
+    CALCULATE (
+        SUM ( production_hierarchy[Volume] ),
+        FILTER (
+            ALL ( 'Calendar' ),
+            'Calendar'[Year] = YEAR ( TODAY() ) - 1
+        )
+    )
+    , FormatString = "0"
+
+--------------------------
+-- Measure: [YoY Growth %]
+--------------------------
+MEASURE 'Measures Table Production'[YoY Growth %] = 
+    DIVIDE (
+        [Current Year Production] - [Previous Year Production],
+        [Previous Year Production]
+    )
+
+----------------------------
+-- Measure: [YTD Production]
+----------------------------
+MEASURE 'Measures Table Production'[YTD Production] = 
+    TOTALYTD(
+        SUM('production_hierarchy'[Volume]),
+        'Calendar'[Date]
+    )
+    , FormatString = "0"
+
+-----------------------------
+-- Measure: [PYTD Production]
+-----------------------------
+MEASURE 'Measures Table Production'[PYTD Production] = 
+    CALCULATE(
+        [YTD Production],
+        SAMEPERIODLASTYEAR('Calendar'[Date])
+    )
+    , FormatString = "0"
+
+---------------------------------
+-- Measure: [YOY % (YTD vs PYTD)]
+---------------------------------
+MEASURE 'Measures Table Production'[YOY % (YTD vs PYTD)] = 
+    DIVIDE(
+        [YTD Production] - [PYTD Production],
+        [PYTD Production]
+    )
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+--------------------------------
+-- Measure: [Average Production]
+--------------------------------
+MEASURE 'Measures Table Production'[Average Production] = AVERAGE(production_hierarchy[Volume])
+
+-----------------------------------
+-- Measure: [Rolling 3M Production]
+-----------------------------------
+MEASURE 'Measures Table Production'[Rolling 3M Production] = 
+    CALCULATE(
+        SUM('production_hierarchy'[Volume]),
+        DATESINPERIOD(
+            'Calendar'[Date],
+            MAX('Calendar'[Date]),
+            -3,
+            MONTH
+        )
+    )
+    , FormatString = "0"
+
+-----------------------------------
+-- Measure: [Rolling 6M Production]
+-----------------------------------
+MEASURE 'Measures Table Production'[Rolling 6M Production] = 
+    CALCULATE(
+        SUM('production_hierarchy'[Volume]),
+        DATESINPERIOD(
+            'Calendar'[Date],
+            MAX('Calendar'[Date]),
+            -6,
+            MONTH
+        )
+    )
+    , FormatString = "#,0"
+
+------------------------------------
+-- Measure: [Rolling 12M Production]
+------------------------------------
+MEASURE 'Measures Table Production'[Rolling 12M Production] = 
+    CALCULATE(
+        SUM('production_hierarchy'[Volume]),
+        DATESINPERIOD(
+            'Calendar'[Date],
+            MAX('Calendar'[Date]),
+            -12,
+            MONTH
+        )
+    )
+    , FormatString = "0"
+
+--------------------------------
+-- Measure: [Monthly Production]
+--------------------------------
+MEASURE 'Measures Table Production'[Monthly Production] = 
+    CALCULATE(
+        SUM('production_hierarchy'[Volume]),
+        ALLEXCEPT('production_hierarchy', 'Calendar'[Year-Month])  -- YearMonth is YYYYMM or similar
+    )
+    , FormatString = "0"
+
+----------------------------------------
+-- Measure: [CAGR (Complete Years Only)]
+----------------------------------------
+MEASURE 'Measures Table Production'[CAGR (Complete Years Only)] = 
+    VAR _CompleteYears =
+        FILTER (
+            VALUES ( 'production_hierarchy'[Year] ),
+            CALCULATE (
+                COUNTROWS ( DISTINCT ( 'production_hierarchy'[Month Name] ) )
+            ) = 12
+        )
+    VAR _FirstYear =
+        MINX ( _CompleteYears, 'production_hierarchy'[Year] )
+    VAR _LastYear =
+        MAXX ( _CompleteYears, 'production_hierarchy'[Year] )
+    VAR _FirstYearValue =
+        CALCULATE (
+            SUM ( 'production_hierarchy'[Volume] ),
+            'production_hierarchy'[Year] = _FirstYear
+        )
+    VAR _LastYearValue =
+        CALCULATE (
+            SUM ( 'production_hierarchy'[Volume] ),
+            'production_hierarchy'[Year] = _LastYear
+        )
+    VAR _NumYears = _LastYear - _FirstYear
+    RETURN
+    IF (
+        _NumYears > 0 && _FirstYearValue > 0,
+        ( ( _LastYearValue / _FirstYearValue ) ^ ( 1 / _NumYears ) - 1 ),
+        BLANK ()
+    )
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+---------------------------
+-- Measure: [Selected Area]
+---------------------------
+MEASURE 'Measures Table Production'[Selected Area] = 
+    IF(
+        HASONEVALUE('production_hierarchy'[Area]),
+        SELECTEDVALUE('production_hierarchy'[Area]),
+        "All Areas"
+    )
+
+----------------------------------
+-- Measure: [Selected PADD Region]
+----------------------------------
+MEASURE 'Measures Table Production'[Selected PADD Region] = 
+    IF(
+        HASONEVALUE('production_hierarchy'[PADD_Region]),
+        SELECTEDVALUE('production_hierarchy'[PADD_Region]),
+        "All Regions"
+    )
+
+----------------------------
+-- Measure: [Rolling 3M Avg]
+----------------------------
+MEASURE 'Measures Table Production'[Rolling 3M Avg] = 
+    AVERAGEX (
+        DATESINPERIOD (
+            'Calendar'[Date],
+            MAX ( 'Calendar'[Date] ),
+            -3,
+            MONTH
+        ),
+        CALCULATE ( SUM ( 'production_hierarchy'[Volume] ) )
+    )
+    , FormatString = "#,0.00"
+
+----------------------------
+-- Measure: [Rolling 6M Avg]
+----------------------------
+MEASURE 'Measures Table Production'[Rolling 6M Avg] = 
+    AVERAGEX (
+        DATESINPERIOD (
+            'Calendar'[Date],
+            MAX ( 'Calendar'[Date] ),
+            -6,
+            MONTH
+        ),
+        CALCULATE ( SUM ( 'production_hierarchy'[Volume] ) )
+    )
+
+-----------------------------
+-- Measure: [Rolling 12M Avg]
+-----------------------------
+MEASURE 'Measures Table Production'[Rolling 12M Avg] = 
+    AVERAGEX (
+        DATESINPERIOD (
+            'Calendar'[Date],
+            MAX ( 'Calendar'[Date] ),
+            -12,
+            MONTH
+        ),
+        CALCULATE ( SUM ( 'production_hierarchy'[Volume] ) )
+    )
+    , FormatString = "#,0.00"
+
+--------------------------------
+-- Measure: [Current Production]
+--------------------------------
+MEASURE 'Measures Table Production'[Current Production] = 
+    CALCULATE(
+        SUM('production_hierarchy'[Volume]),
+        LASTDATE('Calendar'[Date])
+    )
+    , FormatString = "0"
+
+---------------------------------------
+-- Measure: [Deviation from 3M Avg (%)]
+---------------------------------------
+MEASURE 'Measures Table Production'[Deviation from 3M Avg (%)] = DIVIDE([Current Production] - [Rolling 3M Avg], [Rolling 3M Avg], 0)
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+---------------------------------------
+-- Measure: [Deviation from 6M Avg (%)]
+---------------------------------------
+MEASURE 'Measures Table Production'[Deviation from 6M Avg (%)] = DIVIDE([Current Production] - [Rolling 6M Avg], [Rolling 6M Avg], 0)
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+----------------------------------------
+-- Measure: [Deviation from 12M Avg (%)]
+----------------------------------------
+MEASURE 'Measures Table Production'[Deviation from 12M Avg (%)] = DIVIDE([Current Production] - [Rolling 12M Avg], [Rolling 12M Avg], 0)
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+-----------------------------------
+-- Measure: [Dev from 3M Avg Arrow]
+-----------------------------------
+MEASURE 'Measures Table Production'[Dev from 3M Avg Arrow] = 
+    var uparrow = UNICHAR(129093)
+    var downarrow = UNICHAR(129095)
+    var revenuegrowth = [Deviation from 3M Avg (%)]
+    
+    RETURN
+    IF(revenuegrowth < 0,
+     FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & downarrow,
+        FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & uparrow
+    )
+
+-----------------------------------
+-- Measure: [Dev from 6M Avg Arrow]
+-----------------------------------
+MEASURE 'Measures Table Production'[Dev from 6M Avg Arrow] = 
+    var uparrow = UNICHAR(129093)
+    var downarrow = UNICHAR(129095)
+    var revenuegrowth = [Deviation from 6M Avg (%)]
+    
+    RETURN
+    IF(revenuegrowth < 0,
+     FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & downarrow,
+        FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & uparrow
+    )
+
+------------------------------------
+-- Measure: [Dev from 12M Avg Arrow]
+------------------------------------
+MEASURE 'Measures Table Production'[Dev from 12M Avg Arrow] = 
+    var uparrow = UNICHAR(129093)
+    var downarrow = UNICHAR(129095)
+    var revenuegrowth = [Deviation from 12M Avg (%)]
+    
+    RETURN
+    IF(revenuegrowth < 0,
+     FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & downarrow,
+        FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & uparrow
+    )
+
+------------------------------
+-- Measure: [Volatility Index]
+------------------------------
+MEASURE 'Measures Table Production'[Volatility Index] = 
+    CALCULATE(
+        STDEVX.P(
+            SUMMARIZE(
+                'production_hierarchy',
+                'production_hierarchy'[Date],
+                "MonthlyVolume", CALCULATE(SUM('production_hierarchy'[Volume]))
+            ),
+            [MonthlyVolume]
+        )
+    )
+
+--------------------------------------
+-- Measure: [Coefficient of Variation]
+--------------------------------------
+MEASURE 'Measures Table Production'[Coefficient of Variation] = 
+    DIVIDE(
+        [Volatility Index],  // your existing std dev measure
+        AVERAGEX(
+            VALUES('production_hierarchy'[Date]),
+            CALCULATE(SUM('production_hierarchy'[Volume]))
+        )
+    )
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+------------------------------------------
+-- Measure: [Production Consistency Score]
+------------------------------------------
+MEASURE 'Measures Table Production'[Production Consistency Score] = 
+    VAR AvgProd =
+        AVERAGEX(
+            VALUES('production_hierarchy'[Date]),
+            CALCULATE(SUM('production_hierarchy'[Volume]))
+        )
+    VAR WithinRangeMonths =
+        COUNTROWS(
+            FILTER(
+                VALUES('production_hierarchy'[Date]),
+                VAR m = CALCULATE(SUM('production_hierarchy'[Volume]))
+                RETURN m >= AvgProd * 0.9 && m <= AvgProd * 1.1
+            )
+        )
+    VAR TotalMonths = COUNTROWS(VALUES('production_hierarchy'[Date]))
+    RETURN
+    DIVIDE(WithinRangeMonths, TotalMonths)
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+--------------------------
+-- Measure: [Decline Rate]
+--------------------------
+MEASURE 'Measures Table Production'[Decline Rate] = 
+    VAR CurrentMonth = SUM('production_hierarchy'[Volume])
+    VAR PrevMonth =
+        CALCULATE(
+            SUM('production_hierarchy'[Volume]),
+            DATEADD('production_hierarchy'[Date], -1, MONTH)
+        )
+    RETURN
+    IF(
+        NOT ISBLANK(PrevMonth),
+        DIVIDE(CurrentMonth - PrevMonth, PrevMonth) * 100
+    )
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+-----------------------------------
+-- Measure: [Average Monthly Price]
+-----------------------------------
+MEASURE 'Measures Table Production'[Average Monthly Price] = 
+    AVERAGEX(
+        VALUES('Crude Oil Prices WTI'[Date]),
+        CALCULATE(
+            AVERAGE('Crude Oil Prices WTI'[Cushing, OK WTI Spot Price FOB (Dollars per Barrel)])
+        )
+    )
+
+---------------------
+-- Measure: [Revenue]
+---------------------
+MEASURE 'Measures Table Production'[Revenue] = 
+    SUMX(
+        'production_hierarchy',
+        'production_hierarchy'[Volume] * 1000 *
+        RELATED('Crude Oil Prices WTI'[Cushing, OK WTI Spot Price FOB (Dollars per Barrel)])
+    )
+
+---------------------
+-- Measure: [Measure]
+---------------------
+MEASURE 'Measures Table Production'[Measure] = 
+
+------------------------------------------
+-- Measure: [Monthly Production (Barrels)]
+------------------------------------------
+MEASURE 'Measures Table Production'[Monthly Production (Barrels)] = 
+    SUMX(
+        VALUES('production_hierarchy'[Date]),
+        CALCULATE(SUM('production_hierarchy'[Volume])) * 1000
+    )
+    , FormatString = "0"
+
+-----------------------------
+-- Measure: [Monthly Revenue]
+-----------------------------
+MEASURE 'Measures Table Production'[Monthly Revenue] = 
+    SUMX(
+        VALUES('production_hierarchy'[Date]),
+        [Average Monthly Price] * [Monthly Production (Barrels)]
+    )
+    , FormatString = "#,0.00"
+
+--------------------------------------------
+-- Measure: [Production vs National Avg (%)]
+--------------------------------------------
+MEASURE 'Measures Table Production'[Production vs National Avg (%)] = 
+    VAR RegionAvg =
+        DIVIDE(
+            SUM('production_hierarchy'[Volume]),
+            DISTINCTCOUNT('production_hierarchy'[Date])
+        )
+    VAR NationalAvg =
+        CALCULATE(
+            DIVIDE(
+                SUM('production_hierarchy'[Volume]),
+                DISTINCTCOUNT('production_hierarchy'[Date])
+            ),
+            ALL('production_hierarchy')   // removes region filter
+        )
+    RETURN
+    DIVIDE(RegionAvg - NationalAvg, NationalAvg)
+
+---------------------------------------------
+-- Calculated Table: 'Measures Table Revenue'
+---------------------------------------------
+TABLE 'Measures Table Revenue' = DATATABLE("Placeholder", STRING, {{"Keep"}})
+
+-----------------------------
+-- Measure: [Current Revenue]
+-----------------------------
+MEASURE 'Measures Table Revenue'[Current Revenue] = 
+    CALCULATE(
+        SUM('production_hierarchy'[Revenue]),
+        LASTDATE('Calendar'[Date])
+    )
+    , FormatString = "\$#,0.00;(\$#,0.00);\$#,0.00"
+
+------------------------------------
+-- Measure: [Previous Month Revenue]
+------------------------------------
+MEASURE 'Measures Table Revenue'[Previous Month Revenue] = 
+    CALCULATE(
+        [Total Revenue],
+        DATEADD(
+            'Calendar'[Date],
+            -1,
+            MONTH
+        )
+    )
+
+---------------------------
+-- Measure: [Total Revenue]
+---------------------------
+MEASURE 'Measures Table Revenue'[Total Revenue] = Sum('production_hierarchy'[Revenue])
+    , FormatString = "\$#,0;(\$#,0);\$#,0"
+
+------------------------------
+-- Measure: [Revenue Growth %]
+------------------------------
+MEASURE 'Measures Table Revenue'[Revenue Growth %] = DIVIDE([Total Revenue] - [Previous Month Revenue], [Previous Month Revenue])
+
+----------------------------------
+-- Measure: [Revenue Growth Arrow]
+----------------------------------
+MEASURE 'Measures Table Revenue'[Revenue Growth Arrow] = 
+    var uparrow = UNICHAR(129093)
+    var downarrow = UNICHAR(129095)
+    var revenuegrowth = [Revenue Growth %]
+    
+    RETURN
+    IF(revenuegrowth < 0,
+     FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & downarrow,
+        FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & uparrow
+    )
+
+-----------------------------------
+-- Measure: [Previous Year Revenue]
+-----------------------------------
+MEASURE 'Measures Table Revenue'[Previous Year Revenue] = 
+    CALCULATE (
+        SUM ( production_hierarchy[Revenue] ),
+        FILTER (
+            ALL ( 'Calendar' ),
+            'Calendar'[Year] = YEAR ( TODAY() ) - 1
+        )
+    )
+    , FormatString = "0"
+
+------------------------------------
+-- Measure: [Revenue Same Period LY]
+------------------------------------
+MEASURE 'Measures Table Revenue'[Revenue Same Period LY] = 
+    CALCULATE(
+        [Total Revenue],
+        DATEADD(
+            'Calendar'[Date],
+            -1,
+            YEAR))
+
+----------------------------------
+-- Measure: [Revenue Growth YOY %]
+----------------------------------
+MEASURE 'Measures Table Revenue'[Revenue Growth YOY %] = DIVIDE([Total Revenue] - [Revenue Same Period LY], [Revenue Same Period LY])
+
+--------------------------------------
+-- Measure: [Revenue Growth YOY Arrow]
+--------------------------------------
+MEASURE 'Measures Table Revenue'[Revenue Growth YOY Arrow] = 
+    var uparrow = UNICHAR(129093)
+    var downarrow = UNICHAR(129095)
+    var revenuegrowth = [Revenue Growth YOY %]
+    
+    RETURN
+    IF(revenuegrowth < 0,
+     FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & downarrow,
+        FORMAT(ROUND(revenuegrowth * 100, 2), "0.00") & "%" & " " & uparrow
+    )
+
+------------------------------------
+-- Measure: [Rolling 3M Avg Revenue]
+------------------------------------
+MEASURE 'Measures Table Revenue'[Rolling 3M Avg Revenue] = 
+    AVERAGEX (
+        DATESINPERIOD (
+            'Calendar'[Date],
+            MAX ( 'Calendar'[Date] ),
+            -3,
+            MONTH
+        ),
+        CALCULATE ( SUM ( 'production_hierarchy'[Revenue] ) )
+    )
+    , FormatString = "\$#,0.00;(\$#,0.00);\$#,0.00"
+
+------------------------------------
+-- Measure: [Rolling 6M Avg Revenue]
+------------------------------------
+MEASURE 'Measures Table Revenue'[Rolling 6M Avg Revenue] = 
+    AVERAGEX (
+        DATESINPERIOD (
+            'Calendar'[Date],
+            MAX ( 'Calendar'[Date] ),
+            -6,
+            MONTH
+        ),
+        CALCULATE ( SUM ( 'production_hierarchy'[Revenue] ) )
+    )
+    , FormatString = "\$#,0.00;(\$#,0.00);\$#,0.00"
+
+-------------------------------------
+-- Measure: [Rolling 12M Avg Revenue]
+-------------------------------------
+MEASURE 'Measures Table Revenue'[Rolling 12M Avg Revenue] = 
+    AVERAGEX (
+        DATESINPERIOD (
+            'Calendar'[Date],
+            MAX ( 'Calendar'[Date] ),
+            -12,
+            MONTH
+        ),
+        CALCULATE ( SUM ( 'production_hierarchy'[Revenue] ) )
+    )
+    , FormatString = "\$#,0.00;(\$#,0.00);\$#,0.00"
+
+-------------------------------------------
+-- Measure: [Deviation from 3M Avg Rev (%)]
+-------------------------------------------
+MEASURE 'Measures Table Revenue'[Deviation from 3M Avg Rev (%)] = DIVIDE([Current Revenue] - [Rolling 3M Avg Revenue], [Rolling 3M Avg Revenue], 0)
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+-------------------------------------------
+-- Measure: [Deviation from 6M Avg Rev (%)]
+-------------------------------------------
+MEASURE 'Measures Table Revenue'[Deviation from 6M Avg Rev (%)] = DIVIDE([Current Revenue] - [Rolling 6M Avg Revenue], [Rolling 6M Avg Revenue], 0)
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+--------------------------------------------
+-- Measure: [Deviation from 12M Avg Rev (%)]
+--------------------------------------------
+MEASURE 'Measures Table Revenue'[Deviation from 12M Avg Rev (%)] = DIVIDE([Current Revenue] - [Rolling 12M Avg Revenue], [Rolling 12M Avg Revenue], 0)
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+--------------------------
+-- Measure: [CAGR Revenue]
+--------------------------
+MEASURE 'Measures Table Revenue'[CAGR Revenue] = 
+    VAR CompleteYears =
+        FILTER (
+            VALUES ( 'production_hierarchy'[Year] ),
+            CALCULATE (
+                DISTINCTCOUNT ( 'production_hierarchy'[YearMonth] ),
+                'production_hierarchy'[Revenue] > 0
+            ) = 12
+        )
+    VAR StartYear = MINX ( CompleteYears, 'production_hierarchy'[Year] )
+    VAR EndYear   = MAXX ( CompleteYears, 'production_hierarchy'[Year] )
+    VAR StartRevenue =
+        CALCULATE (
+            SUM ( 'production_hierarchy'[Revenue] ),
+            'production_hierarchy'[Year] = StartYear
+        )
+    VAR EndRevenue =
+        CALCULATE (
+            SUM ( 'production_hierarchy'[Revenue] ),
+            'production_hierarchy'[Year] = EndYear
+        )
+    VAR NumYears = EndYear - StartYear
+    RETURN
+    IF (
+        NOT ISBLANK(StartYear) &&
+        NOT ISBLANK(EndYear) &&
+        NumYears > 0 &&
+        StartRevenue > 0,
+        ( ( EndRevenue / StartRevenue ) ^ ( 1 / NumYears ) - 1 ),
+        BLANK()
+    )
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+----------------------------
+-- Measure: [Complete Years]
+----------------------------
+MEASURE 'Measures Table Revenue'[Complete Years] = 
+    FILTER (
+        VALUES ( 'production_hierarchy'[Year] ),
+        CALCULATE ( DISTINCTCOUNT ( 'production_hierarchy'[YearMonth] ) ) = 12
+    )
+    , FormatString = "0"
+
+----------------------------
+-- Measure: [StdDev Revenue]
+----------------------------
+MEASURE 'Measures Table Revenue'[StdDev Revenue] = 
+    VAR MonthlyRevenue =
+        SUMMARIZE (
+            'production_hierarchy',
+            'production_hierarchy'[Year],
+            'production_hierarchy'[YearMonth],
+            "MonthlyTotal", SUM ( 'production_hierarchy'[Revenue] )
+        )
+    RETURN
+    STDEVX.P ( MonthlyRevenue, [MonthlyTotal] )
+    , FormatString = "#,0.00"
+
+------------------------------------------
+-- Measure: [Coefficient of Rev Variation]
+------------------------------------------
+MEASURE 'Measures Table Revenue'[Coefficient of Rev Variation] = 
+    VAR MonthlyRevenue =
+        SUMMARIZE (
+            'production_hierarchy',
+            'production_hierarchy'[Year],
+            'production_hierarchy'[YearMonth],
+            "MonthlyTotal", SUM ( 'production_hierarchy'[Revenue] )
+        )
+    VAR Std_Dev = STDEVX.P ( MonthlyRevenue, [MonthlyTotal] )
+    VAR Avg_Rev = AVERAGEX ( MonthlyRevenue, [MonthlyTotal] )
+    RETURN
+    DIVIDE ( Std_Dev, Avg_Rev )
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+---------------------------------------
+-- Measure: [Revenue Consistency Score]
+---------------------------------------
+MEASURE 'Measures Table Revenue'[Revenue Consistency Score] = 
+    VAR MonthlyRevenue =
+        SUMMARIZE (
+            'production_hierarchy',
+            'production_hierarchy'[Year],
+            'production_hierarchy'[YearMonth],
+            "MonthlyTotal", SUM ( 'production_hierarchy'[Revenue] )
+        )
+    VAR AvgRev = AVERAGEX ( MonthlyRevenue, [MonthlyTotal] )
+    VAR LowerBound = AvgRev * 0.9
+    VAR UpperBound = AvgRev * 1.1
+    VAR TotalMonths = COUNTROWS ( MonthlyRevenue )
+    VAR StableMonths =
+        COUNTROWS (
+            FILTER (
+                MonthlyRevenue,
+                [MonthlyTotal] >= LowerBound &&
+                [MonthlyTotal] <= UpperBound
+            )
+        )
+    RETURN
+    DIVIDE ( StableMonths, TotalMonths )
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+------------------------------
+-- Measure: [Decline Rate Rev]
+------------------------------
+MEASURE 'Measures Table Revenue'[Decline Rate Rev] = 
+    VAR CurrentMonth = SUM('production_hierarchy'[Revenue])
+    VAR PrevMonth =
+        CALCULATE(
+            SUM('production_hierarchy'[Revenue]),
+            DATEADD('production_hierarchy'[Date], -1, MONTH)
+        )
+    RETURN
+    IF(
+        NOT ISBLANK(PrevMonth),
+        DIVIDE(CurrentMonth - PrevMonth, PrevMonth) * 100
+    )
+    , FormatString = "0.00%;-0.00%;0.00%"
+
+-------------------------
+-- Measure: [YTD Revenue]
+-------------------------
+MEASURE 'Measures Table Revenue'[YTD Revenue] = 
+    TOTALYTD(
+        SUM('production_hierarchy'[Revenue]),
+        'Calendar'[Date]
+    )
+
+--------------------------
+-- Measure: [PYTD revenue]
+--------------------------
+MEASURE 'Measures Table Revenue'[PYTD revenue] = 
+    CALCULATE(
+        [YTD Revenue],
+        SAMEPERIODLASTYEAR('Calendar'[Date])
+    )
+
+-------------------------------------
+-- Measure: [YOY % (YTD vs PYTD) Rev]
+-------------------------------------
+MEASURE 'Measures Table Revenue'[YOY % (YTD vs PYTD) Rev] = 
+    DIVIDE(
+        [YTD Revenue] - [PYTD revenue],
+        [PYTD revenue]
+    )
+    , FormatString = "0.00%;-0.00%;0.00%"
