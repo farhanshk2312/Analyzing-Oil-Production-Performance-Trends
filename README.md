@@ -1,4 +1,4 @@
-# Project Title: Analyzing Crude Oil Production Performance Trends Across PADD Areas in the US
+# Analyzing Crude Oil Production Performance Trends Across PADD Areas in the US
 
 Data Source: https://www.eia.gov/petroleum/ 
 
